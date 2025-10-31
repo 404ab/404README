@@ -1,0 +1,483 @@
+#!/usr/bin/env python3
+# 404README — A simple, emoji-and-badge powered README.md generator for profiles and projects
+# Tool Created & Coded by 404AB
+
+import argparse
+import os
+import sys
+from datetime import datetime
+import shutil
+
+# ---------- Color helpers (ANSI, no dependencies) ----------
+RESET = "\033[0m"
+BOLD = "\033[1m"
+DIM = "\033[2m"
+
+# 6-color rainbow
+RAINBOW = [
+    "\033[38;5;196m",  # red
+    "\033[38;5;202m",  # orange
+    "\033[38;5;226m",  # yellow
+    "\033[38;5;46m",   # green
+    "\033[38;5;27m",   # blue
+    "\033[38;5;93m",   # purple
+]
+
+ACCENT = "\033[38;5;45m"
+SUBTLE = "\033[38;5;244m"
+
+
+def rainbow_text(text: str) -> str:
+    parts = []
+    for i, ch in enumerate(text):
+        color = RAINBOW[i % len(RAINBOW)]
+        parts.append(f"{color}{ch}{RESET}")
+    return ''.join(parts)
+
+
+def print_banner():
+    # Huge, colorful banner with centered title and attribution
+    import shutil as _shutil
+    title = "404README"
+    cols = max(96, min(160, _shutil.get_terminal_size((120, 30)).columns))
+    inner_width = cols - 2
+
+    def center(text: str) -> str:
+        pad_total = max(0, inner_width - len(text))
+        left = pad_total // 2
+        right = pad_total - left
+        return f"{ACCENT}║{RESET}" + (" " * left) + text + (" " * right) + f"{ACCENT}║{RESET}"
+
+    top = f"{ACCENT}╔" + ("═" * (cols - 2)) + f"╗{RESET}"
+    bottom = f"{ACCENT}╚" + ("═" * (cols - 2)) + f"╝{RESET}"
+
+    # Build a big multi-line area
+    print(top)
+    # Empty padding lines
+    for i in range(3):
+        print(center(""))
+
+    # Huge rainbow title line
+    big_title = f"  {BOLD}{rainbow_text(title)}{RESET}  "
+    print(center(big_title))
+
+    # Another spacer and subtle subtitle
+    for i in range(2):
+        print(center(""))
+
+    print(center(f"{DIM}{SUBTLE}Tool Created & Coded by 404AB{RESET}"))
+
+    for i in range(3):
+        print(center(""))
+
+    print(bottom)
+    print("")
+
+
+# ---------- Badges ----------
+
+def shields_badge(label: str, message: str, color: str = "blue", logo: str | None = None, style: str = "for-the-badge") -> str:
+    from urllib.parse import quote
+    lbl = quote(label)
+    msg = quote(message)
+    logo_q = f"&logo={quote(logo)}" if logo else ""
+    return f"![{label}]" \
+           f"(https://img.shields.io/badge/{lbl}-{msg}-{color}?style={style}{logo_q})"
+
+
+TECH_LOGOS = {
+    "python": ("Python", "3776AB", "python"),
+    "javascript": ("JavaScript", "F7DF1E", "javascript"),
+    "typescript": ("TypeScript", "3178C6", "typescript"),
+    "node": ("Node.js", "339933", "nodedotjs"),
+    "go": ("Go", "00ADD8", "go"),
+    "rust": ("Rust", "000000", "rust"),
+    "java": ("Java", "007396", "openjdk"),
+    "c#": ("C%23", "239120", "csharp"),
+    "c++": ("C%2B%2B", "00599C", "cplusplus"),
+    "react": ("React", "61DAFB", "react"),
+    "vue": ("Vue.js", "4FC08D", "vuedotjs"),
+    "svelte": ("Svelte", "FF3E00", "svelte"),
+    "next.js": ("Next.js", "000000", "next.js"),
+    "docker": ("Docker", "2496ED", "docker"),
+    "kubernetes": ("Kubernetes", "326CE5", "kubernetes"),
+    "postgresql": ("PostgreSQL", "4169E1", "postgresql"),
+    "mysql": ("MySQL", "4479A1", "mysql"),
+    "mongodb": ("MongoDB", "47A248", "mongodb"),
+    "redis": ("Redis", "DC382D", "redis"),
+    "aws": ("AWS", "232F3E", "amazonaws"),
+    "gcp": ("GCP", "4285F4", "googlecloud"),
+    "azure": ("Azure", "0078D4", "microsoftazure"),
+}
+
+
+def tech_badges(techs: list[str]) -> str:
+    badges = []
+    for t in techs:
+        key = t.strip().lower()
+        if not key:
+            continue
+        label, color, logo = TECH_LOGOS.get(key, (t.strip(), "blue", None))
+        badges.append(shields_badge("Tech", label, color, logo))
+    return " " .join(badges)
+
+
+# ---------- Generators ----------
+
+def generate_project_readme(data: dict) -> str:
+    title = data.get("title", "My Project")
+    desc = data.get("description", "")
+    license_name = data.get("license", "MIT")
+    repo = data.get("repo", "")
+    author = data.get("author", "")
+    features = data.get("features", [])
+    techs = data.get("techs", [])
+    install = data.get("install", [])
+    usage = data.get("usage", [])
+    tests = data.get("tests", [])
+    contributing = data.get("contributing", [])
+
+    badges = []
+    if license_name:
+        badges.append(shields_badge("License", license_name, "2ea44f"))
+    if repo:
+        badges.append(f"![Issues](https://img.shields.io/github/issues/{repo}?style=for-the-badge)")
+        badges.append(f"![PRs](https://img.shields.io/github/issues-pr/{repo}?style=for-the-badge)")
+        badges.append(f"![Stars](https://img.shields.io/github/stars/{repo}?style=for-the-badge)")
+        badges.append(f"![Last Commit](https://img.shields.io/github/last-commit/{repo}?style=for-the-badge)")
+    badges.append("![Open Source Love](https://img.shields.io/badge/Open%20Source-%E2%9D%A4-red?style=for-the-badge)")
+
+    tech = tech_badges(techs)
+
+    lines = []
+    lines.append(f"# {title} 🚀")
+    if badges:
+        lines.append("\n" + " ".join(badges) + "\n")
+    if desc:
+        lines.append(desc)
+
+    if tech:
+        lines.append("\n## 🧰 Tech Stack\n")
+        lines.append(tech + "\n")
+
+    if features:
+        lines.append("## ✨ Features")
+        for f in features:
+            lines.append(f"- {f}")
+        lines.append("")
+
+    if install:
+        lines.append("## 📦 Installation")
+        lines.extend([f"1. {step}" for step in install])
+        lines.append("")
+
+    if usage:
+        lines.append("## 🧪 Usage")
+        for s in usage:
+            lines.append(f"- {s}")
+        lines.append("")
+
+    if tests:
+        lines.append("## ✅ Tests")
+        for s in tests:
+            lines.append(f"- {s}")
+        lines.append("")
+
+    if contributing:
+        lines.append("## 🤝 Contributing")
+        lines.append("Contributions, issues and feature requests are welcome! Feel free to open a PR.")
+        for s in contributing:
+            lines.append(f"- {s}")
+        lines.append("")
+
+    if license_name:
+        year = datetime.utcnow().year
+        lines.append("## 🛡️ License")
+        lines.append(f"{license_name} © {year} {author}".strip())
+
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def generate_profile_readme(data: dict) -> str:
+    name = data.get("name", "Hello")
+    tagline = data.get("tagline", "")
+    about = data.get("about", [])
+    skills = data.get("skills", [])
+    tools = data.get("tools", [])
+    location = data.get("location", "")
+    email = data.get("email", "")
+    website = data.get("website", "")
+    github_user = data.get("github_user", "")
+    linkedin = data.get("linkedin", "")
+
+    badges = [
+        "![Visitor Badge](https://komarev.com/ghpvc/?username={}&style=for-the-badge)".format(github_user or "your-github"),
+        "![Open To Work](https://img.shields.io/badge/Open%20to-Opportunities-brightgreen?style=for-the-badge)",
+    ]
+
+    tech = tech_badges(skills + tools)
+
+    lines = []
+    lines.append(f"# {name} 👋")
+    if tagline:
+        lines.append(f"{tagline}\n")
+
+    lines.append(" ".join(badges) + "\n")
+
+    if about:
+        lines.append("## 🙋 About Me")
+        for a in about:
+            lines.append(f"- {a}")
+        lines.append("")
+
+    if tech:
+        lines.append("## 🛠️ Skills & Tools\n")
+        lines.append(tech + "\n")
+
+    if any([location, email, website, linkedin, github_user]):
+        lines.append("## 🌐 Connect")
+        if location:
+            lines.append(f"- 📍 {location}")
+        if email:
+            lines.append(f"- ✉️ {email}")
+        if website:
+            lines.append(f"- 🔗 {website}")
+        if linkedin:
+            lines.append(f"- 💼 https://www.linkedin.com/in/{linkedin}")
+        if github_user:
+            lines.append(f"- 🐙 https://github.com/{github_user}")
+        lines.append("")
+
+    if github_user:
+        lines.append("## 📊 GitHub Stats")
+        lines.append(f"![GitHub stats](https://github-readme-stats.vercel.app/api?username={github_user}&show_icons=true&theme=radical)")
+        lines.append(f"![Top Langs](https://github-readme-stats.vercel.app/api/top-langs/?username={github_user}&layout=compact&theme=radical)")
+        lines.append(f"![GitHub Streak](https://streak-stats.demolab.com?user={github_user}&theme=radical)")
+        lines.append("")
+
+    lines.append("---")
+    lines.append("Made with ❤️ using 404README")
+
+    return "\n".join(lines).rstrip() + "\n"
+
+
+# ---------- Interactive prompts ----------
+
+def prompt_list(message: str) -> list[str]:
+    print(f"{ACCENT}?{RESET} {message} {SUBTLE}(separate with ';', leave empty to skip){RESET}")
+    raw = input("> ").strip()
+    if not raw:
+        return []
+    return [x.strip() for x in raw.split(";") if x.strip()]
+
+
+def interactive_collect(kind: str) -> dict:
+    print(f"{BOLD}Interactive {kind.capitalize()} README setup{RESET}\n")
+    data: dict[str, object] = {}
+
+    if kind == "project":
+        data["title"] = input("Project title: ").strip() or "My Project"
+        data["description"] = input("Short description: ").strip()
+        data["author"] = input("Author name: ").strip()
+        data["license"] = input("License (e.g., MIT): ").strip() or "MIT"
+        data["repo"] = input("GitHub repo (owner/name), optional: ").strip()
+        data["techs"] = prompt_list("Tech stack (e.g., Python; Docker; PostgreSQL)")
+        data["features"] = prompt_list("Key features")
+        data["install"] = prompt_list("Installation steps (ordered)")
+        data["usage"] = prompt_list("Usage notes/commands")
+        data["tests"] = prompt_list("How to run tests")
+        data["contributing"] = prompt_list("Contributing guidelines bullets")
+    else:
+        data["name"] = input("Your name or handle: ").strip() or "Hi there"
+        data["tagline"] = input("Short tagline: ").strip()
+        data["about"] = prompt_list("About me bullets")
+        data["skills"] = prompt_list("Skills (e.g., Python; JavaScript; React)")
+        data["tools"] = prompt_list("Tools (e.g., Docker; AWS)")
+        data["location"] = input("Location (optional): ").strip()
+        data["email"] = input("Email (optional): ").strip()
+        data["website"] = input("Website (optional): ").strip()
+        data["github_user"] = input("GitHub username (for badges/stats): ").strip()
+        data["linkedin"] = input("LinkedIn handle (optional): ").strip()
+
+    return data
+
+
+# ---------- Interactive menu ----------
+
+def _save_content_flow(content: str, out_path: str, dry_run: bool = False) -> None:
+    if dry_run:
+        print(f"{BOLD}🔎 Dry-run preview (not saving){RESET}\n")
+        print("-" * 60)
+        sys.stdout.write(content)
+        print("-" * 60)
+        return
+    out = os.path.abspath(os.path.expanduser(out_path))
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    with open(out, "w", encoding="utf-8") as f:
+        f.write(content)
+    print(f"{BOLD}✅ Saved:{RESET} {out}")
+
+
+def interactive_menu(default_output: str = "README.md", dry_run: bool = False) -> int:
+    out_path = default_output or "README.md"
+    last_content: str | None = None
+    last_kind: str | None = None
+
+    while True:
+        print(f"{BOLD}{ACCENT}Main Menu{RESET}")
+        print("1) ✨ Create Project README (wizard)")
+        print("2) 🙋 Create Profile README (wizard)")
+        print(f"3) 📝 Change output path  {SUBTLE}(current: {out_path}){RESET}")
+        print("4) 👀 Preview last generated")
+        print("5) 💾 Save last generated")
+        print("0) 🚪 Exit")
+        choice = input("> ").strip()
+
+        if choice == "1":
+            data = interactive_collect("project")
+            last_content = generate_project_readme(data)
+            last_kind = "project"
+            show = input("Preview now? [Y/n]: ").strip().lower() or "y"
+            if show.startswith("y"):
+                print("-" * 60)
+                sys.stdout.write(last_content)
+                print("-" * 60)
+            save = input("Save to file now? [Y/n]: ").strip().lower() or "y"
+            if save.startswith("y"):
+                name_in = input(f"Enter output filename [{out_path}]: ").strip()
+                if name_in:
+                    out_path = name_in
+                _save_content_flow(last_content, out_path, dry_run)
+
+        elif choice == "2":
+            data = interactive_collect("profile")
+            last_content = generate_profile_readme(data)
+            last_kind = "profile"
+            show = input("Preview now? [Y/n]: ").strip().lower() or "y"
+            if show.startswith("y"):
+                print("-" * 60)
+                sys.stdout.write(last_content)
+                print("-" * 60)
+            save = input("Save to file now? [Y/n]: ").strip().lower() or "y"
+            if save.startswith("y"):
+                name_in = input(f"Enter output filename [{out_path}]: ").strip()
+                if name_in:
+                    out_path = name_in
+                _save_content_flow(last_content, out_path, dry_run)
+
+        elif choice == "3":
+            newp = input(f"Enter output path [{out_path}]: ").strip()
+            if newp:
+                out_path = newp
+                print(f"Set output path to: {out_path}")
+
+        elif choice == "4":
+            if last_content is None:
+                print("No content generated yet.")
+            else:
+                print("-" * 60)
+                sys.stdout.write(last_content)
+                print("-" * 60)
+
+        elif choice == "5":
+            if last_content is None:
+                print("Nothing to save yet. Generate something first.")
+            else:
+                name_in = input(f"Enter output filename [{out_path}]: ").strip()
+                if name_in:
+                    out_path = name_in
+                _save_content_flow(last_content, out_path, dry_run)
+
+        elif choice == "0":
+            return 0
+        else:
+            print("Invalid choice. Please select a valid option.")
+
+
+# ---------- CLI ----------
+
+def parse_args():
+    p = argparse.ArgumentParser(
+        prog="404README",
+        description="Generate README.md files for projects or GitHub profiles with badges and emojis.",
+    )
+    p.add_argument("--type", choices=["project", "profile"], default="project", help="README type to generate")
+    p.add_argument("--output", "-o", default="README.md", help="Output file path")
+    p.add_argument("--non-interactive", action="store_true", help="Read values only from flags/env, do not prompt")
+    p.add_argument("--dry-run", action="store_true", help="Print to stdout instead of writing a file")
+
+    # Common quick flags
+    p.add_argument("--title")
+    p.add_argument("--description")
+
+    # Project flags
+    p.add_argument("--author")
+    p.add_argument("--license", dest="license_name")
+    p.add_argument("--repo", help="GitHub repo in the form owner/name")
+    p.add_argument("--techs", help="Semicolon-separated list")
+    p.add_argument("--features", help="Semicolon-separated list")
+    p.add_argument("--install", help="Semicolon-separated list")
+    p.add_argument("--usage", help="Semicolon-separated list")
+    p.add_argument("--tests", help="Semicolon-separated list")
+    p.add_argument("--contributing", help="Semicolon-separated list")
+
+    # Profile flags
+    p.add_argument("--name")
+    p.add_argument("--tagline")
+    p.add_argument("--about", help="Semicolon-separated list")
+    p.add_argument("--skills", help="Semicolon-separated list")
+    p.add_argument("--tools", help="Semicolon-separated list")
+    p.add_argument("--location")
+    p.add_argument("--email")
+    p.add_argument("--website")
+    p.add_argument("--github-user")
+    p.add_argument("--linkedin")
+
+    return p.parse_args()
+
+
+def split_opt(value: str | None) -> list[str]:
+    if not value:
+        return []
+    return [x.strip() for x in value.split(";") if x.strip()]
+
+
+def main():
+    print_banner()
+    args = parse_args()
+
+    if args.non_interactive:
+        data = {}
+        if args.type == "project":
+            data = {
+                "title": args.title or "My Project",
+                "description": args.description or "",
+                "author": args.author or "",
+                "license": args.license_name or "MIT",
+                "repo": args.repo or "",
+                "techs": split_opt(args.techs),
+                "features": split_opt(args.features),
+                "install": split_opt(args.install),
+                "usage": split_opt(args.usage),
+                "tests": split_opt(args.tests),
+                "contributing": split_opt(args.contributing),
+            }
+        else:
+            data = {
+                "name": args.name or "Hi there",
+                "tagline": args.tagline or "",
+                "about": split_opt(args.about),
+                "skills": split_opt(args.skills),
+                "tools": split_opt(args.tools),
+                "location": args.location or "",
+                "email": args.email or "",
+                "website": args.website or "",
+                "github_user": args.__dict__.get("github_user") or "",
+                "linkedin": args.linkedin or "",
+            }
+    else:
+        return interactive_menu(args.output, args.dry_run)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
