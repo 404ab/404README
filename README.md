@@ -1,25 +1,14 @@
-# 404README
+# 404README✨
 
-![Open Source Love](https://img.shields.io/badge/Open%20Source-%E2%9D%A4-red?style=for-the-badge)
+![Open Source Love](https://img.shields.io/badge/Open%20Source-%E2%9D%A4-hotpink?style=for-the-badge)
 ![Python](https://img.shields.io/badge/Built%20with-Python-3776AB?style=for-the-badge&logo=python)
-![CLI](https://img.shields.io/badge/Type-CLI-blue?style=for-the-badge)
-![Issues](https://img.shields.io/github/issues/404AB/404README?style=for-the-badge)
-![PRs](https://img.shields.io/github/issues-pr/404AB/404README?style=for-the-badge)
+![CLI](https://img.shields.io/badge/Type-CLI-orange?style=for-the-badge)
 ![Stars](https://img.shields.io/github/stars/404AB/404README?style=for-the-badge)
-![Last Commit](https://img.shields.io/github/last-commit/404AB/404README?style=for-the-badge)
 
-```
-██████╗  ██████╗ ██╗  ██╗██████╗ ██████╗ ███████╗███╗   ███╗███████╗ ██████╗ ██████╗ ███████╗
-██╔══██╗██╔═══██╗██║  ██║██╔══██╗██╔══██╗██╔════╝████╗ ████║██╔════╝██╔════╝██╔═══██╗██╔════╝
-██████╔╝██║   ██║███████║██║  ██║██████╔╝█████╗  ██╔████╔██║█████╗  ██║     ██║   ██║███████╗
-██╔══██╗██║   ██║██╔══██║██║  ██║██╔══██╗██╔══╝  ██║╚██╔╝██║██╔══╝  ██║     ██║   ██║╚════██║
-██████╔╝╚██████╔╝██║  ██║██████╔╝██║  ██║███████╗██║ ╚═╝ ██║███████╗╚██████╗╚██████╔╝███████║
-╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝     ╚═╝╚══════╝ ╚═════╝ ╚═════╝ ╚══════╝
-```
 
-<sub><i>Tool Created & Coded by 404AB</i></sub>
+**A fast, emoji-and-badge powered README.md generator for projects and GitHub profiles. It features a huge banner, interactive menu, and non-interactive flags for automation.**
 
-A fast, emoji-and-badge powered README.md generator for projects and GitHub profiles. It features a huge banner, interactive menu, and non-interactive flags for automation.
+-------------------------------------
 
 - ✨ Generates Project or Profile READMEs
 - 🏷️ Auto-includes Shields.io badges and emojis
@@ -65,8 +54,9 @@ chmod +x ./404README/404README
 ## 🤝 Contributing
 PRs and issues are welcome. Open a discussion to propose features or improvements.
 
-## 🛡️ License
-Choose a license for your repo (e.g., MIT) and add a LICENSE file.
+## 🛡️ License ##
+**MIT LICENSE**
+
 
 ---
 Made with ❤️ using 404README
